@@ -32,6 +32,8 @@
 #' @param normalize Specifies the event-time coefficient to be normalized. Defaults to - pre - 1.
 #' @param anticipation_effects_normalization If set to TRUE, runs the default process and switches coefficient to be normalized to 0
 #' when there are anticipation effects. If set to FALSE, does not make the switch. Defaults to TRUE.
+#' @param additional_FE Optional character vector indicating columns to be used as additional fixed effects (beyond idvar and timevar).
+#' Currently only implemented for OLS estimator.
 #'
 #' @return A list that contains, under "output", the estimation output as an lm_robust object, and under "arguments", the arguments passed to the function.
 #' @import dplyr
@@ -139,10 +141,49 @@
 #'
 #' summary(eventstudy_model_iv$output)
 #'
+#' # A dynamic OLS model with additional fixed effects (e.g., industry)
+#' # First, add an example 'industry' column to the data
+#' example_data$industry <- rep(c("A", "B"), each = nrow(example_data)/2, length.out = nrow(example_data))
+#' eventstudy_model_addFE <-
+#'   EventStudy(
+#'     estimator = "OLS",
+#'     data = example_data,
+#'     outcomevar = "y_base",
+#'     policyvar = "z",
+#'     idvar = "id",
+#'     timevar = "t",
+#'     additional_FE = "industry", # Add industry fixed effects
+#'     FE = TRUE, TFE = TRUE,
+#'     post = 3, overidpost = 5,
+#'     pre  = 2, overidpre  = 4,
+#'     normalize = - 3,
+#'     cluster = TRUE
+#'   )
+#'
+#' summary(eventstudy_model_addFE$output)
+#'
+#' # A dynamic model with an unbalanced panel
+#' data_unbal <- example_data[1:(nrow(example_data)-1),]  # drop last row to make unbalanced
+#'
+#' eventstudy_model_unbal <-
+#'  EventStudy(
+#'     estimator = "OLS",
+#'     data = data_unbal,
+#'     outcomevar = "y_base",
+#'     policyvar = "z",
+#'     idvar = "id",
+#'     timevar = "t",
+#'     pre = 0, post = 3,
+#'     normalize = -1
+#'   )
+#'
+#' summary(eventstudy_model_unbal$output)
+#'
 
 EventStudy <- function(estimator, data, outcomevar, policyvar, idvar, timevar, controls = NULL,
                        proxy = NULL, proxyIV = NULL, FE = TRUE, TFE = TRUE, post, overidpost = 1, pre, overidpre = post + pre,
-                       normalize = -1 * (pre + 1), cluster = TRUE, anticipation_effects_normalization = TRUE) {
+                       normalize = -1 * (pre + 1), cluster = TRUE, anticipation_effects_normalization = TRUE,
+                       additional_FE = NULL) {
 
     # Check for errors in arguments
     if (! estimator %in% c("OLS", "FHS")) {stop("estimator should be either 'OLS' or 'FHS'.")}
@@ -167,6 +208,8 @@ EventStudy <- function(estimator, data, outcomevar, policyvar, idvar, timevar, c
     if (! is.logical(cluster)) {stop("cluster should be either TRUE or FALSE.")}
     if (FE & !cluster)         {stop("cluster=TRUE is required when FE=TRUE.")}
     if (! is.logical(anticipation_effects_normalization)) {stop("anticipation_effects_normalization should be either TRUE or FALSE.")}
+    if (! (is.null(additional_FE) | is.character(additional_FE))) {stop("additional_FE should be either NULL or a character vector.")}
+    if (estimator == "FHS" & !is.null(additional_FE)) {warning("additional_FE is specified but estimator is 'FHS'. Additional fixed effects are currently only implemented for 'OLS'.")}
 
     if (! (is.numeric(post)       &  post >= 0      &  post %% 1 == 0))           {stop("post should be a whole number.")}
     if (! (is.numeric(overidpost) & overidpost >= 0 & overidpost %% 1 == 0))      {stop("overidpost should be a whole number.")}
@@ -314,7 +357,7 @@ EventStudy <- function(estimator, data, outcomevar, policyvar, idvar, timevar, c
         event_study_formula <- PrepareModelFormula(estimator, outcomevar, str_policy_vars,
                                                    static, controls, proxy, proxyIV)
 
-        output       <- EventStudyOLS(event_study_formula, data, idvar, timevar, FE, TFE, cluster)
+        output       <- EventStudyOLS(event_study_formula, data, idvar, timevar, FE, TFE, cluster, additional_FE)
         coefficients <- str_policy_vars
     }
     if (estimator == "FHS") {
@@ -360,6 +403,7 @@ EventStudy <- function(estimator, data, outcomevar, policyvar, idvar, timevar, c
                              "normalize"  = normalize,
                              "normalization_column"    = normalization_column,
                              "cluster"                 = cluster,
+                             "additional_FE"           = additional_FE,
                              "eventstudy_coefficients" = coefficients)
 
     return(list("output"    = output,

@@ -32,12 +32,14 @@
 #' @param normalize Specifies the event-time coefficient to be normalized. Defaults to - pre - 1.
 #' @param anticipation_effects_normalization If set to TRUE, runs the default process and switches coefficient to be normalized to 0
 #' when there are anticipation effects. If set to FALSE, does not make the switch. Defaults to TRUE.
+#' @param allow_duplicate_id If TRUE, the function estimates a regression where duplicated ID-time rows are weighted by their duplication count. If FALSE, the function raises an error if duplicate unit-time keys exist in the input data. Default is FALSE.
+#' @param avoid_internal_copy If TRUE, the function avoids making an internal deep copy of the input data, and instead directly modifies the input data.table. Default is FALSE.
 #'
 #' @return A list that contains, under "output", the estimation output as an lm_robust object, and under "arguments", the arguments passed to the function.
 #' @import dplyr
 #' @import estimatr
 #' @importFrom stats reformulate
-#' @importFrom data.table setorderv as.data.table .SD
+#' @importFrom data.table setorderv as.data.table is.data.table .SD copy
 #' @export
 #'
 #' @examples
@@ -142,15 +144,20 @@
 
 EventStudy <- function(estimator, data, outcomevar, policyvar, idvar, timevar, controls = NULL,
                        proxy = NULL, proxyIV = NULL, FE = TRUE, TFE = TRUE, post, overidpost = 1, pre, overidpre = post + pre,
-                       normalize = -1 * (pre + 1), cluster = TRUE, anticipation_effects_normalization = TRUE) {
+                       normalize = -1 * (pre + 1), cluster = TRUE, anticipation_effects_normalization = TRUE,
+                       allow_duplicate_id = FALSE, avoid_internal_copy = FALSE) {
 
     # Check for errors in arguments
     if (! estimator %in% c("OLS", "FHS")) {stop("estimator should be either 'OLS' or 'FHS'.")}
     if (! is.data.frame(data))            {stop("data should be a data frame.")}
-    if (! is.character(outcomevar))       {stop("outcomevar should be a character.")}
-    if (! is.character(policyvar))        {stop("policyvar should be a character.")}
-    if (! is.character(idvar))            {stop("idvar should be a character.")}
-    if (! is.character(timevar))          {stop("timevar should be a character.")}
+    for (var in c(idvar, timevar, outcomevar, policyvar)) {
+        if ((! is.character(var))) {
+            stop(paste0(var, " should be a character."))
+        }
+        if (! var %in% colnames(data)) {
+            stop(paste0(var, " should be the name of a variable in the dataset."))
+        }
+    }
     if (! (is.null(controls) | is.character(controls))) {stop("controls should be either NULL or a character.")}
 
     if ((estimator == "OLS" & ! is.null(proxy)))        {stop("proxy should only be specified when estimator = 'FHS'.")}
@@ -162,11 +169,13 @@ EventStudy <- function(estimator, data, outcomevar, policyvar, idvar, timevar, c
         stop("When estimator is 'FHS' and there are no leads in the model, proxyIV must be specified explicitly.")
     }
 
-    if (! is.logical(FE))      {stop("FE should be either TRUE or FALSE.")}
-    if (! is.logical(TFE))     {stop("TFE should be either TRUE or FALSE.")}
-    if (! is.logical(cluster)) {stop("cluster should be either TRUE or FALSE.")}
+    for (var in c(FE, TFE, cluster, anticipation_effects_normalization, allow_duplicate_id, avoid_internal_copy)) {
+        if (! is.logical(var)) {
+            stop(paste0(var, " should be either TRUE or FALSE."))
+        }
+    }
+
     if (FE & !cluster)         {stop("cluster=TRUE is required when FE=TRUE.")}
-    if (! is.logical(anticipation_effects_normalization)) {stop("anticipation_effects_normalization should be either TRUE or FALSE.")}
 
     if (! (is.numeric(post)       &  post >= 0      &  post %% 1 == 0))           {stop("post should be a whole number.")}
     if (! (is.numeric(overidpost) & overidpost >= 0 & overidpost %% 1 == 0))      {stop("overidpost should be a whole number.")}
@@ -177,6 +186,9 @@ EventStudy <- function(estimator, data, outcomevar, policyvar, idvar, timevar, c
            & normalize >= -(pre + overidpre + 1) & normalize <= post + overidpost)) {
         stop("normalize should be an integer between -(pre + overidpre + 1) and (post + overidpost).")
     }
+    if (avoid_internal_copy & ! data.table::is.data.table(data)) {
+        warning("`avoid_internal_copy` has no effect because dataset passed to `data` is not a `data.table`.")
+    }
 
     # Check for errors in data
     if (! is.numeric(data[[timevar]])) {stop("timevar column in dataset should be numeric.")}
@@ -184,8 +196,17 @@ EventStudy <- function(estimator, data, outcomevar, policyvar, idvar, timevar, c
         stop("timevar column in dataset should be a vector of integers.")
     }
 
-    data_ids <- as.data.frame(data)[, c(idvar, timevar)]
+    if (data.table::is.data.table(data)) {
+        if (!avoid_internal_copy) {
+            data <- data.table::copy(data)
+        }
+    } else {
+        data <- data.table::as.data.table(data)
+    }
+    data.table::setorderv(data, c(idvar, timevar))
+    data_ids <- data[, .SD, .SDcols = c(idvar, timevar)]
 
+    # Check panel balance and unique keys
     n_units       <- length(base::unique(data[[idvar]]))
     n_periods     <- length(base::unique(data[[timevar]]))
     n_unique_rows <- nrow(data[!base::duplicated(data_ids),])
@@ -195,11 +216,15 @@ EventStudy <- function(estimator, data, outcomevar, policyvar, idvar, timevar, c
     } else {
         unbalanced <- FALSE
     }
-
-    data.table::setorderv(data, c(idvar, timevar))
+    if (n_unique_rows != nrow(data)) {
+        if (allow_duplicate_id == TRUE) {
+            warning("idvar-timevar pairs do not uniquely identify all rows in the data.")
+        } else if (allow_duplicate_id == FALSE) {
+            stop("idvar-timevar pairs do not uniquely identify all rows in the data. Turn on allow_duplicate_id if you want to proceed with weighted duplicated rows.")
+        }
+    }
 
     detect_holes <- function(dt, idvar, timevar) {
-        dt <- data.table::as.data.table(dt)
         holes_per_id <- dt[, .SD[!is.na(base::get(timevar))], by = c(idvar)
                          ][, list(holes = any(base::diff(base::get(timevar)) != 1)),
                             by = c(idvar)]
@@ -264,7 +289,7 @@ EventStudy <- function(estimator, data, outcomevar, policyvar, idvar, timevar, c
                               timevar_holes = timevar_holes)
 
         lead_endpoint_var <- paste0(policyvar, "_lead", num_fd_leads)
-        data[lead_endpoint_var] <- 1 - data[lead_endpoint_var]
+        data[, (lead_endpoint_var) := 1 - get(lead_endpoint_var)]
     }
 
     if (pre != 0 & normalize == -1 & anticipation_effects_normalization) {

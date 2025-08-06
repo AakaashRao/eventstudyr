@@ -1,4 +1,46 @@
 
+# Housekeeping ------------------------------------------------------------
+
+test_that("does not modify input data (even if input is data.table) when avoid_internal_copy = FALSE", {
+
+    example_dt <- data.table::as.data.table(example_data)
+    example_dt_copy <- data.table::copy(example_dt)
+
+    outputs <- suppressWarnings(
+        EventStudy(
+            estimator = "OLS", data = example_dt, outcomevar = "y_base",
+                          policyvar = "z", idvar = "id", timevar = "t",
+                          controls = "x_r", FE = TRUE, TFE = TRUE,
+                          post = 2, pre = 3, overidpre = 4,
+                          overidpost = 11, normalize = - 1,
+                          cluster = TRUE, anticipation_effects_normalization = TRUE)
+    )
+
+    expect_true(isTRUE(all.equal(example_dt, example_dt_copy, check.attributes = FALSE)))
+})
+
+test_that("input dt IS modified in-place when avoid_internal_copy = TRUE", {
+
+    example_dt <- data.table::as.data.table(example_data)
+    example_dt_copy <- data.table::copy(example_dt)
+    address_before  <- rlang::obj_address(example_dt)
+
+    outputs <- suppressWarnings(
+        EventStudy(
+            estimator = "OLS", data = example_dt, outcomevar = "y_base",
+            policyvar = "z", idvar = "id", timevar = "t",
+            controls = "x_r", FE = TRUE, TFE = TRUE,
+            post = 2, pre = 3, overidpre = 4,
+            overidpost = 11, normalize = - 1,
+            cluster = TRUE, anticipation_effects_normalization = TRUE,
+            avoid_internal_copy = TRUE)
+    )
+    address_after <- rlang::obj_address(example_dt)
+
+    expect_equal(address_before, address_after)
+    expect_true(isFALSE(identical(example_dt, example_dt_copy)))
+})
+
 # OLS ---------------------------------------------------------------------
 
 test_that("correctly creates highest order shiftvalues", {
@@ -252,42 +294,6 @@ test_that("removes the correct column when normalize = post + overidpost", {
     normalization_column <- paste0("z", "_lag", normalize)
     expect_equal(stringr::str_extract(normalization_column, "lag"), "lag")
     expect_true(!normalization_column %in% shiftvalues)
-})
-
-test_that("subtraction is peformed on the correct column", {
-
-    post       <- 1
-    pre        <- 1
-    overidpre  <- 2
-    overidpost <- 2
-
-    df_first_diff <- ComputeFirstDifferences(df = df_sample_static, idvar = "id", timevar = "t", diffvar = "z")
-
-    num_fd_lag_periods   <- post + overidpost - 1
-    num_fd_lead_periods  <- pre + overidpre
-
-    furthest_lag_period <- num_fd_lag_periods + 1
-
-    df_fd_leads         <- ComputeShifts(df_first_diff, idvar = "id", timevar = "t",
-                                         shiftvar = paste0("z", "_fd"), shiftvalues = -num_fd_lead_periods:-1)
-    df_fd_leads_shifted <- ComputeShifts(df_fd_leads, idvar = "id", timevar = "t",
-                                         shiftvar = paste0("z", "_fd"), shiftvalues = 1:num_fd_lag_periods)
-
-    df_lag           <- ComputeShifts(df_fd_leads_shifted, idvar = "id", timevar = "t",
-                                      shiftvar = "z", shiftvalues = furthest_lag_period)
-    df_lag_lead      <- ComputeShifts(df_lag, idvar = "id", timevar = "t",
-                                      shiftvar = "z", shiftvalues = -num_fd_lead_periods)
-
-
-    col_subtract_1   <- paste0("z", "_lead", num_fd_lead_periods)
-    df_shift_minus_1 <- 1 - df_lag_lead[col_subtract_1]
-
-    num_equal <- sum(df_shift_minus_1[col_subtract_1] == 1 - df_lag_lead[col_subtract_1], na.rm = TRUE)
-    num_na    <- sum(is.na(df_shift_minus_1[col_subtract_1]))
-    column_subtract_degree <- as.double(stringr::str_extract(col_subtract_1, "(?<=lead)[0-9]+"))
-
-    expect_equal(num_equal + num_na, nrow(df_lag_lead))
-    expect_equal(column_subtract_degree, pre + overidpre)
 })
 
 # FHS ---------------------------------------------------------------------

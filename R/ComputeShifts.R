@@ -6,7 +6,6 @@
 #' @param shiftvar Character indicating column of variable that will be shifted.
 #' @param shiftvalues Numeric vector specifying the leads/lags to be computed. For example, c(-1, 0, 1) will compute the lead, current, and lag values.
 #' @param timevar_holes Logical indicating whether the panel contains gaps in the time variable. Defaults to FALSE.
-#' @param return_df Logical indicating whether the function should return a data frame (TRUE) or data.table (FALSE). Defaults to TRUE.
 #'
 #' @return The passed dataset augmented with columns that reflect the desired shift values
 
@@ -22,14 +21,14 @@
 #' )
 #'
 #'
-#' @importFrom data.table setDT setorderv shift := CJ .SD
+#' @importFrom data.table setorderv shift := CJ .SD
 #' @keywords internal
 #' @noRd
 
 ComputeShifts <- function(df, idvar, timevar, shiftvar, shiftvalues,
-                          timevar_holes = FALSE, return_df = TRUE) {
-    if (! is.data.frame(df)) {
-        stop("df should be a data frame.")
+                          timevar_holes = FALSE) {
+    if (! data.table::is.data.table(df)) {
+        stop("df should be a data.table.")
     }
     for (var in c(idvar, timevar, shiftvar)) {
         if ((! is.character(var))) {
@@ -48,11 +47,7 @@ ComputeShifts <- function(df, idvar, timevar, shiftvar, shiftvalues,
     if (! is.logical(timevar_holes)) {
         stop("timevar_holes should be logical.")
     }
-    if (! is.logical(return_df)) {
-        stop("return_df should be logical.")
-    }
 
-    data.table::setDT(df)
     data.table::setorderv(df, cols = c(idvar, timevar))
 
     lags  <-    shiftvalues[shiftvalues >  0]
@@ -92,10 +87,5 @@ ComputeShifts <- function(df, idvar, timevar, shiftvar, shiftvalues,
         df <- merge(df, df_all,
                     by = c(idvar, timevar, shiftvar), all.x = TRUE)
     }
-
-    if (return_df) {
-        df <- as.data.frame(df)
-    }
-
     return(df)
 }

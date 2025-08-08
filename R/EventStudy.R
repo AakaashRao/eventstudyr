@@ -35,9 +35,10 @@
 #' @param allow_duplicate_id If TRUE, the function estimates a regression where duplicated ID-time rows are weighted by their duplication count. If FALSE, the function raises an error if duplicate unit-time keys exist in the input data. Default is FALSE.
 #' @param avoid_internal_copy If TRUE, the function avoids making an internal deep copy of the input data, and instead directly modifies the input data.table. Default is FALSE.
 #'
-#' @return A list that contains, under "output", the estimation output as an lm_robust object, and under "arguments", the arguments passed to the function.
+#' @return A list that contains, under "output", the estimation output as a model object (from either `fixest` or `estimatr` depending on `kernel`), and under "arguments", the arguments passed to the function.
 #' @import dplyr
 #' @import estimatr
+#' @import fixest
 #' @importFrom stats reformulate
 #' @importFrom data.table setorderv as.data.table is.data.table .SD copy
 #' @export
@@ -145,10 +146,12 @@
 EventStudy <- function(estimator, data, outcomevar, policyvar, idvar, timevar, controls = NULL,
                        proxy = NULL, proxyIV = NULL, FE = TRUE, TFE = TRUE, post, overidpost = 1, pre, overidpre = post + pre,
                        normalize = -1 * (pre + 1), cluster = TRUE, anticipation_effects_normalization = TRUE,
-                       allow_duplicate_id = FALSE, avoid_internal_copy = FALSE) {
+                       allow_duplicate_id = FALSE, avoid_internal_copy = FALSE,
+                       kernel = "fixest") {
 
     # Check for errors in arguments
     if (! estimator %in% c("OLS", "FHS")) {stop("estimator should be either 'OLS' or 'FHS'.")}
+    if (! kernel %in% c("fixest", "estimatr")) {stop("kernel should be either 'fixest' or 'estimatr'.")}
     if (! is.data.frame(data))            {stop("data should be a data frame.")}
     for (var in c(idvar, timevar, outcomevar, policyvar)) {
         if ((! is.character(var))) {
@@ -339,7 +342,7 @@ EventStudy <- function(estimator, data, outcomevar, policyvar, idvar, timevar, c
         event_study_formula <- PrepareModelFormula(estimator, outcomevar, str_policy_vars,
                                                    static, controls, proxy, proxyIV)
 
-        output       <- EventStudyOLS(event_study_formula, data, idvar, timevar, FE, TFE, cluster)
+        output       <- EventStudyOLS(event_study_formula, data, idvar, timevar, FE, TFE, cluster, kernel)
         coefficients <- str_policy_vars
     }
     if (estimator == "FHS") {
@@ -363,7 +366,7 @@ EventStudy <- function(estimator, data, outcomevar, policyvar, idvar, timevar, c
         event_study_formula <- PrepareModelFormula(estimator, outcomevar, str_policy_vars,
                                                    static, controls, proxy, proxyIV)
 
-        output       <- EventStudyFHS(event_study_formula, data, idvar, timevar, FE, TFE, cluster)
+        output       <- EventStudyFHS(event_study_formula, data, idvar, timevar, FE, TFE, cluster, kernel)
         coefficients <- dplyr::setdiff(str_policy_vars, proxyIV)
     }
 
@@ -385,7 +388,8 @@ EventStudy <- function(estimator, data, outcomevar, policyvar, idvar, timevar, c
                              "normalize"  = normalize,
                              "normalization_column"    = normalization_column,
                              "cluster"                 = cluster,
-                             "eventstudy_coefficients" = coefficients)
+                              "eventstudy_coefficients" = coefficients,
+                              "kernel"    = kernel)
 
     return(list("output"    = output,
                 "arguments" = event_study_args))

@@ -29,7 +29,8 @@ test_that("FE = TRUE,
             timevar = timevar,
             FE = FE,
             TFE = TFE,
-            cluster = cluster
+            cluster = cluster,
+            kernel = "estimatr"
         )
     }
 
@@ -69,7 +70,8 @@ test_that("FE = FALSE,
             timevar = timevar,
             FE = FE,
             TFE = TFE,
-            cluster = cluster
+            cluster = cluster,
+            kernel = "estimatr"
         )
     }
 
@@ -109,7 +111,8 @@ test_that("FE = TRUE,
             timevar = timevar,
             FE = FE,
             TFE = TFE,
-            cluster = cluster
+            cluster = cluster,
+            kernel = "estimatr"
         )
     }
 
@@ -150,7 +153,8 @@ test_that("FE = FALSE,
             timevar = timevar,
             FE = FE,
             TFE = TFE,
-            cluster = cluster
+            cluster = cluster,
+            kernel = "estimatr"
         )
     }
 
@@ -191,7 +195,8 @@ test_that("FE = TRUE,
             timevar = timevar,
             FE = FE,
             TFE = TFE,
-            cluster = cluster
+            cluster = cluster,
+            kernel = "estimatr"
         )
     }
 
@@ -231,7 +236,8 @@ test_that("FE = FALSE,
             timevar = timevar,
             FE = FE,
             TFE = TFE,
-            cluster = cluster
+            cluster = cluster,
+            kernel = "estimatr"
         )
     }
 
@@ -271,7 +277,8 @@ test_that("FE = TRUE,
             timevar = timevar,
             FE = FE,
             TFE = TFE,
-            cluster = cluster
+            cluster = cluster,
+            kernel = "estimatr"
         )
     }
 
@@ -350,7 +357,8 @@ test_that("Coefficients and Standard Errors agree with base STATA", {
             timevar = timevar,
             FE = FE,
             TFE = TFE,
-            cluster = cluster
+            cluster = cluster,
+            kernel = "estimatr"
         )
 
     df_test_STATA <- read.csv("./input/df_test_base_STATA.csv", col.names = c("term", "coef", "std_error"))

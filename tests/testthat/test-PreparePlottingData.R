@@ -9,7 +9,7 @@ test_that("labels are unique", {
                                   controls = "x_r", FE = TRUE, TFE = TRUE,
                                   post = 3, pre = 2, overidpre = 4, overidpost = 5, normalize = - 3, cluster = TRUE, anticipation_effects_normalization = TRUE)
 
-    df_tidy_estimates <- estimatr::tidy(list_EventStudy$output)
+    df_tidy_estimates <- broom::tidy(list_EventStudy$output)
 
     policyvar  <- list_EventStudy[[2]]$policyvar
     post       <- list_EventStudy[[2]]$post
@@ -37,7 +37,7 @@ test_that("the correct labels are created", {
                                   controls = "x_r", FE = TRUE, TFE = TRUE,
                                   post = 3, pre = 2, overidpre = 4, overidpost = 5, normalize = - 3, cluster = TRUE, anticipation_effects_normalization = TRUE)
 
-    df_tidy_estimates <- estimatr::tidy(list_EventStudy$output)
+    df_tidy_estimates <- broom::tidy(list_EventStudy$output)
 
     policyvar  <- list_EventStudy[[2]]$policyvar
     post       <- list_EventStudy[[2]]$post
@@ -64,7 +64,7 @@ test_that("the labels are ordered correctly", {
                                   controls = "x_r", FE = TRUE, TFE = TRUE,
                                   post = 3, pre = 2, overidpre = 4, overidpost = 5, normalize = - 3, cluster = TRUE, anticipation_effects_normalization = TRUE)
 
-    df_tidy_estimates <- estimatr::tidy(list_EventStudy$output)
+    df_tidy_estimates <- broom::tidy(list_EventStudy$output)
 
     policyvar  <- list_EventStudy[[2]]$policyvar
     post       <- list_EventStudy[[2]]$post
@@ -91,7 +91,7 @@ test_that("the control variable is removed", {
                                   controls = "x_r", FE = TRUE, TFE = TRUE,
                                   post = 3, pre = 2, overidpre = 4, overidpost = 5, normalize = - 3, cluster = TRUE, anticipation_effects_normalization = TRUE)
 
-    df_tidy_estimates <- estimatr::tidy(list_EventStudy$output)
+    df_tidy_estimates <- broom::tidy(list_EventStudy$output)
 
     policyvar  <- list_EventStudy[[2]]$policyvar
     post       <- list_EventStudy[[2]]$post
@@ -118,7 +118,7 @@ test_that("the largest lag label is correctly created", {
                                     controls = "x_r", FE = TRUE, TFE = TRUE,
                                     post = 3, pre = 2, overidpre = 4, overidpost = 5, normalize = - 3, cluster = TRUE, anticipation_effects_normalization = TRUE)
 
-    df_tidy_estimates <- estimatr::tidy(list_EventStudy$output)
+    df_tidy_estimates <- broom::tidy(list_EventStudy$output)
 
     policyvar  <- list_EventStudy[[2]]$policyvar
     post       <- list_EventStudy[[2]]$post
@@ -147,7 +147,7 @@ test_that("the largest lead label is correctly created", {
                                   controls = "x_r", FE = TRUE, TFE = TRUE,
                                   post = 3, pre = 2, overidpre = 4, overidpost = 5, normalize = - 3, cluster = TRUE, anticipation_effects_normalization = TRUE)
 
-    df_tidy_estimates <- estimatr::tidy(list_EventStudy$output)
+    df_tidy_estimates <- broom::tidy(list_EventStudy$output)
 
     policyvar  <- list_EventStudy[[2]]$policyvar
     post       <- list_EventStudy[[2]]$post
@@ -176,7 +176,7 @@ test_that("all columns besides 'term' and 'label' are 0 for the normalization co
                                   controls = "x_r", FE = TRUE, TFE = TRUE,
                                   post = 3, pre = 2, overidpre = 4, overidpost = 5, normalize = - 3, cluster = TRUE, anticipation_effects_normalization = TRUE)
 
-    df_tidy_estimates <- estimatr::tidy(list_EventStudy$output)
+    df_tidy_estimates <- broom::tidy(list_EventStudy$output)
 
     policyvar  <- list_EventStudy[[2]]$policyvar
     post       <- list_EventStudy[[2]]$post
@@ -211,7 +211,7 @@ test_that("all columns besides 'term' and 'label' are 0 for the proxyIV column",
                                   controls = "x_r", FE = TRUE, TFE = TRUE, proxy = "eta_m",
                                   post = 3, pre = 2, overidpre = 4, overidpost = 5, normalize = - 3, cluster = TRUE, anticipation_effects_normalization = TRUE)
 
-    df_tidy_estimates <- estimatr::tidy(list_EventStudy$output)
+    df_tidy_estimates <- broom::tidy(list_EventStudy$output)
 
     policyvar <- list_EventStudy[[2]]$policyvar
     post <- list_EventStudy[[2]]$post

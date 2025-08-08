@@ -122,7 +122,7 @@ EventStudyPlot <- function(estimates,
 # Estimation Elements -----------------------------------------------------
 
     df_estimates      <- estimates$output
-    df_estimates_tidy <- estimatr::tidy(estimates$output)
+    df_estimates_tidy <- broom::tidy(estimates$output)
 
     static_model <- nrow(df_estimates_tidy) == 1
     if (static_model) {
@@ -153,7 +153,6 @@ EventStudyPlot <- function(estimates,
     plot_CI <- if(!is.null(conf_level)) TRUE else FALSE
 
     if (plot_CI) {
-
         df_estimates_tidy <- AddCIs(df_estimates_tidy, eventstudy_coefficients, conf_level)
     }
 

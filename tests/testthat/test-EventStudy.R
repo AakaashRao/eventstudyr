@@ -13,7 +13,8 @@ test_that("does not modify input data (even if input is data.table) when avoid_i
                           controls = "x_r", FE = TRUE, TFE = TRUE,
                           post = 2, pre = 3, overidpre = 4,
                           overidpost = 11, normalize = - 1,
-                          cluster = TRUE, anticipation_effects_normalization = TRUE)
+                          cluster = TRUE, anticipation_effects_normalization = TRUE,
+                          kernel = "estimatr")
     )
 
     expect_true(isTRUE(all.equal(example_dt, example_dt_copy, check.attributes = FALSE)))
@@ -33,7 +34,8 @@ test_that("input dt IS modified in-place when avoid_internal_copy = TRUE", {
             post = 2, pre = 3, overidpre = 4,
             overidpost = 11, normalize = - 1,
             cluster = TRUE, anticipation_effects_normalization = TRUE,
-            avoid_internal_copy = TRUE)
+            avoid_internal_copy = TRUE,
+            kernel = "estimatr")
     )
     address_after <- rlang::obj_address(example_dt)
 
@@ -54,7 +56,8 @@ test_that("correctly creates highest order shiftvalues", {
         EventStudy(estimator = "OLS", data = example_data, outcomevar = "y_base",
                           policyvar = "z", idvar = "id", timevar = "t",
                           controls = "x_r", FE = TRUE, TFE = TRUE,
-                          post = post, pre = pre, overidpre = overidpre, overidpost = overidpost, normalize = - 1, cluster = TRUE, anticipation_effects_normalization = TRUE)
+                          post = post, pre = pre, overidpre = overidpre, overidpost = overidpost, normalize = - 1, cluster = TRUE, anticipation_effects_normalization = TRUE,
+                          kernel = "estimatr")
     )
 
     shiftvalues      <- outputs$output$term
@@ -111,7 +114,8 @@ test_that("removes the correct column when normalize < 0", {
                           policyvar = "z", idvar = "id", timevar = "t",
                           controls = "x_r", FE = TRUE, TFE = TRUE,
                           post = post, pre = pre, overidpre = overidpre, overidpost = overidpost,
-                          normalize = normalize, cluster = TRUE, anticipation_effects_normalization = TRUE)
+                          normalize = normalize, cluster = TRUE, anticipation_effects_normalization = TRUE,
+                          kernel = "estimatr")
 
     shiftvalues <- outputs$output$term
 
@@ -135,7 +139,8 @@ test_that("removes the correct column when normalize = 0", {
                           policyvar = "z", idvar = "id", timevar = "t",
                           controls = "x_r", FE = TRUE, TFE = TRUE,
                           post = post, pre = pre, overidpre = overidpre, overidpost = overidpost,
-                          normalize = normalize, cluster = TRUE, anticipation_effects_normalization = TRUE)
+                          normalize = normalize, cluster = TRUE, anticipation_effects_normalization = TRUE,
+                          kernel = "estimatr")
 
     shiftvalues <- outputs$output$term
 
@@ -157,7 +162,8 @@ test_that("does not create a first differenced variable when post, overidpost, p
                           policyvar = "z", idvar = "id", timevar = "t",
                           controls = "x_r", FE = TRUE, TFE = TRUE,
                           post = post, pre = pre, overidpre = overidpre, overidpost = overidpost,
-                          normalize = normalize, cluster = TRUE, anticipation_effects_normalization = TRUE)
+                          normalize = normalize, cluster = TRUE, anticipation_effects_normalization = TRUE,
+                          kernel = "estimatr")
 
     shiftvalues <- outputs$output$term
 
@@ -176,7 +182,8 @@ test_that("tests that package and STATA output agree when post, overidpost, pre,
                           policyvar = "z", idvar = "id", timevar = "t",
                           FE = TRUE, TFE = TRUE,
                           post = post, pre = pre, overidpre = overidpre, overidpost = overidpost,
-                          normalize = normalize, cluster = TRUE, anticipation_effects_normalization = TRUE)
+                           normalize = normalize, cluster = TRUE, anticipation_effects_normalization = TRUE,
+                           kernel = "estimatr")
 
     coef_package <- outputs$output$coefficients[[1]]
     std_package  <- outputs$output$std.error[[1]]
@@ -202,7 +209,8 @@ test_that("does not create shiftvalues of differenced variable when post + overi
                           policyvar = "z", idvar = "id", timevar = "t",
                           controls = "x_r", FE = TRUE, TFE = TRUE,
                           post = post, pre = pre, overidpre = overidpre, overidpost = overidpost,
-                          normalize = normalize, cluster = TRUE, anticipation_effects_normalization = TRUE)
+                          normalize = normalize, cluster = TRUE, anticipation_effects_normalization = TRUE,
+                          kernel = "estimatr")
 
     shiftvalues <- outputs$output$term
 
@@ -223,7 +231,8 @@ test_that("does not create leads of differenced variable when pre + overidpre < 
                           policyvar = "z", idvar = "id", timevar = "t",
                           controls = "x_r", FE = TRUE, TFE = TRUE,
                           post = post, pre = pre, overidpre = overidpre, overidpost = overidpost,
-                          normalize = normalize, cluster = TRUE, anticipation_effects_normalization = TRUE)
+                          normalize = normalize, cluster = TRUE, anticipation_effects_normalization = TRUE,
+                          kernel = "estimatr")
 
     shiftvalues <- outputs$output$term
 
@@ -244,7 +253,8 @@ test_that("removes the correct column when normalize > 0", {
                           policyvar = "z", idvar = "id", timevar = "t",
                           controls = "x_r", FE = TRUE, TFE = TRUE,
                           post = post, pre = pre, overidpre = overidpre, overidpost = overidpost,
-                          normalize = normalize, cluster = TRUE, anticipation_effects_normalization = TRUE)
+                          normalize = normalize, cluster = TRUE, anticipation_effects_normalization = TRUE,
+                          kernel = "estimatr")
 
     shiftvalues <- outputs$output$term
 

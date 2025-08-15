@@ -33,7 +33,7 @@ test_that("correctly recognizes missing columns in estimates argument", {
                           controls = "x_r", FE = TRUE, TFE = TRUE,
                           post = 3, pre = 2, overidpre = 4, overidpost = 5, normalize = - 3, cluster = TRUE, anticipation_effects_normalization = TRUE)
 
-   df_test <- broom::tidy(estimates$output)
+    df_test <- estimatr::tidy(estimates$output)
 
     eventstudy_coefficients <- estimates$arguments$eventstudy_coefficients
 
@@ -52,7 +52,7 @@ test_that("correctly recognizes wrong inputs for conf_level argument", {
                      controls = "x_r", FE = TRUE, TFE = TRUE,
                      post = 3, pre = 2, overidpre = 4, overidpost = 5, normalize = - 3, cluster = TRUE, anticipation_effects_normalization = TRUE)
 
-   df_test <- broom::tidy(estimates$output)
+    df_test <- estimatr::tidy(estimates$output)
 
     eventstudy_coefficients <- estimates$arguments$eventstudy_coefficients
 
@@ -80,7 +80,7 @@ test_that("correctly recognizes missing columns in estimates argument", {
                             timevar = "t", controls = "x_r", proxy = "eta_m", FE = TRUE, TFE = TRUE, post = 1,
                             overidpost = 2, pre = 1, overidpre = 2, normalize = -1, cluster = TRUE, anticipation_effects_normalization = FALSE)
 
-   df_test <- broom::tidy(estimates$output)
+    df_test <- estimatr::tidy(estimates$output)
 
     eventstudy_coefficients <- estimates$arguments$eventstudy_coefficients
 
@@ -99,7 +99,7 @@ test_that("correctly recognizes wrong inputs for conf_level argument", {
                             timevar = "t", controls = "x_r", proxy = "eta_m", FE = TRUE, TFE = TRUE, post = 1,
                             overidpost = 2, pre = 1, overidpre = 2, normalize = -1, cluster = TRUE, anticipation_effects_normalization = FALSE)
 
-   df_test <- broom::tidy(estimates$output)
+    df_test <- estimatr::tidy(estimates$output)
 
     eventstudy_coefficients <- estimates$arguments$eventstudy_coefficients
 

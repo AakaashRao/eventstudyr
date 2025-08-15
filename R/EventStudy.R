@@ -341,8 +341,12 @@ EventStudy <- function(estimator, data, outcomevar, policyvar, idvar, timevar, c
 
         output       <- EventStudyOLS(event_study_formula, data, idvar, timevar, FE, TFE, cluster)
         coefficients <- str_policy_vars
-    }
-    if (estimator == "FHS") {
+    } else if (estimator == "feols") {
+        # TODO: implement feols estimator
+        # Then adapt EventStudyPlot to use feols
+        # As well as ensure summary($output) works
+        # Building / modifying tests should be the LAST step
+    } else if (estimator == "FHS") {
 
         if (is.null(proxyIV)) {
             Fstart <- 0

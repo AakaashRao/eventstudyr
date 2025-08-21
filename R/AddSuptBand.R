@@ -49,14 +49,16 @@
 
 AddSuptBand <- function(df_estimates, num_sim = 1000, conf_level = .95, eventstudy_coefficients) {
 
-    if (! class(df_estimates) %in% c("lm_robust", "iv_robust")) {
+    if (! class(df_estimates) %in% c("lm_robust", "iv_robust", "fixest")) {
         stop("estimates is not a data frame with coefficient estimates and standard errors")
     }
     if (! is.numeric(num_sim) | num_sim %% 1 != 0 | num_sim <= 0) {stop("num_sim should be a natural number.")}
     if (! is.numeric(conf_level) | conf_level < 0 | conf_level > 1) {stop("conf_level should be a real number between 0 and 1, inclusive.")}
     if (! is.character(eventstudy_coefficients)) {stop("eventstudy_coefficients should be a character.")}
 
-    vcov_matrix_all <- df_estimates$vcov
+    fixest = class(df_estimates) == "fixest"
+
+    vcov_matrix_all <- if(fixest){vcov(df_estimates)} else {df_estimates$vcov}
     v_terms_to_keep <- colnames(vcov_matrix_all) %in% eventstudy_coefficients
     vcov_matrix <- vcov_matrix_all[v_terms_to_keep, v_terms_to_keep]
 
@@ -75,12 +77,10 @@ AddSuptBand <- function(df_estimates, num_sim = 1000, conf_level = .95, eventstu
         critical_value = t[floor(conf_level_num_sim) + 1]
     }
 
-    df_estimates_tidy <- estimatr::tidy(df_estimates)
+    df_estimates_tidy <- if(fixest){estimatr::tidy(df_estimates)} else {broom::tidy(df_estimates)}
 
     df_estimates_tidy["suptband_lower"] <- df_estimates_tidy$estimate - (critical_value * df_estimates_tidy$std.error)
     df_estimates_tidy["suptband_upper"] <- df_estimates_tidy$estimate + (critical_value * df_estimates_tidy$std.error)
 
-
     return(df_estimates_tidy)
-
 }

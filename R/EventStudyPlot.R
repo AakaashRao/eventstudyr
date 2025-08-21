@@ -121,9 +121,9 @@ EventStudyPlot <- function(estimates,
 
 # Estimation Elements -----------------------------------------------------
 
-    df_estimates <- estimates$output
+    model_estimates <- estimates$output
 
-    static_model <- length(coef(df_estimates)) == 1
+    static_model <- length(coef(model_estimates)) == 1
     if (static_model) {
         stop("EventStudyPlot() does not support static models.")
     }
@@ -145,7 +145,7 @@ EventStudyPlot <- function(estimates,
     plot_supt <- if(!is.null(supt)) TRUE else FALSE
 
     if (plot_supt) {
-        df_estimates_tidy <- AddSuptBand(df_estimates, num_sim = 1000, conf_level = supt,
+        df_estimates_tidy <- AddSuptBand(model_estimates, num_sim = 1000, conf_level = supt,
                                          eventstudy_coefficients = eventstudy_coefficients)
     }
 

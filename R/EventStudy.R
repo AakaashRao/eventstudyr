@@ -346,6 +346,11 @@ EventStudy <- function(estimator, data, outcomevar, policyvar, idvar, timevar, c
         # Then adapt EventStudyPlot to use feols
         # As well as ensure summary($output) works
         # Building / modifying tests should be the LAST step
+        formula <- PrepareModelFormulaFEOLS(outcomevar, str_policy_vars,
+                                          controls, proxy, proxyIV,
+                                          idvar, timevar, FE, TFE)
+        output <- EventStudyFEOLS(formula, data, idvar, timevar, FE, TFE, cluster)
+        coefficients <- str_policy_vars
     } else if (estimator == "FHS") {
 
         if (is.null(proxyIV)) {

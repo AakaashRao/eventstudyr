@@ -40,6 +40,54 @@ if (detect_holes(data, idvar, timevar)) {
     timevar_holes <- FALSE
 }
 
+PrepareModelFormulaFEOLS <- function(outcomevar, str_policy_vars,
+                                     controls = NULL, proxy = NULL, proxyIV = NULL,
+                                     idvar = NULL, timevar = NULL, FE = FALSE, TFE = FALSE) {
+    stopifnot(!is.null(idvar))
+    stopifnot(!is.null(timevar))
+
+    regressors <- c(str_policy_vars, controls)
+
+    if (FE | TFE) {
+        fes <- c()
+        if (FE) {
+            fes <- c(fes, idvar)
+        }
+        if (TFE) {
+            fes <- c(fes, timevar)
+        }
+
+        formula_str <- paste(
+            outcomevar,
+            "~",
+            paste(regressors, collapse = " + "),
+            "|",
+            paste(fes, collapse = " + ")
+        )
+        formula <- stats::as.formula(formula_str)
+    } else {
+        formula <- stats::reformulate(
+            termlabels = regressors,
+            response = outcomevar,
+            intercept = TRUE
+        )
+    }
+    return(formula)
+}
+
+EventStudyFEOLS <- function(formula, prepared_data,
+                          idvar, timevar, FE, TFE, cluster) {
+    
+    cluster = ifelse(cluster, idvar, NULL)
+    
+    ols_output <- fixest::feols(
+        fml = formula,
+        data = prepared_data,
+        cluster = cluster
+    )
+    return(ols_output)
+}
+
 
 # EventStudy <- function(
 #     estimator, 

@@ -78,9 +78,9 @@ PrepareModelFormulaFEOLS <- function(outcomevar, str_policy_vars,
 
 EventStudyFEOLS <- function(formula, prepared_data,
                           idvar, timevar, FE, TFE, cluster) {
-    
+
     cluster = ifelse(cluster, idvar, NULL)
-    
+
     ols_output <- fixest::feols(
         fml = formula,
         data = prepared_data,
@@ -91,52 +91,52 @@ EventStudyFEOLS <- function(formula, prepared_data,
 
 
 output_feols <- EventStudy(
-    estimator = 'feols', 
-    data, 
-    outcomevar, 
-    policyvar, 
-    idvar, 
-    timevar, 
+    estimator = 'feols',
+    data,
+    outcomevar,
+    policyvar,
+    idvar,
+    timevar,
     controls = NULL,
-    proxy = NULL, 
-    proxyIV = NULL, 
-    FE = TRUE, 
-    TFE = TRUE, 
-    post, 
-    overidpost = 1, 
+    proxy = NULL,
+    proxyIV = NULL,
+    FE = TRUE,
+    TFE = TRUE,
+    post,
+    overidpost = 1,
     pre, overidpre = post + pre,
-    normalize = -1 * (pre + 1), 
-    cluster = TRUE, 
+    normalize = -1 * (pre + 1),
+    cluster = TRUE,
     anticipation_effects_normalization = TRUE,
-    allow_duplicate_id = FALSE, 
+    allow_duplicate_id = FALSE,
     avoid_internal_copy = FALSE
 )
 
 output <- EventStudy(
-    estimator = 'OLS', 
-    data, 
-    outcomevar, 
-    policyvar, 
-    idvar, 
-    timevar, 
+    estimator = 'OLS',
+    data,
+    outcomevar,
+    policyvar,
+    idvar,
+    timevar,
     controls = NULL,
-    proxy = NULL, 
-    proxyIV = NULL, 
-    FE = TRUE, 
-    TFE = TRUE, 
-    post, 
-    overidpost = 1, 
+    proxy = NULL,
+    proxyIV = NULL,
+    FE = TRUE,
+    TFE = TRUE,
+    post,
+    overidpost = 1,
     pre, overidpre = post + pre,
-    normalize = -1 * (pre + 1), 
-    cluster = TRUE, 
+    normalize = -1 * (pre + 1),
+    cluster = TRUE,
     anticipation_effects_normalization = TRUE,
-    allow_duplicate_id = FALSE, 
+    allow_duplicate_id = FALSE,
     avoid_internal_copy = FALSE
 )
 
 
 EventStudyPlot(output)
-EventStudyPlotFixest(output_feols)
+EventStudyPlot(output_feols)
 
 estimates = output
 xtitle = "Event time"
@@ -146,7 +146,7 @@ conf_level = .95
 supt = .95
 num_sim = 1000
 add_mean = FALSE
-pre_event_coeffs = TRUE 
+pre_event_coeffs = TRUE
 post_event_coeffs = TRUE
 add_zero_line = TRUE
 smpath = FALSE

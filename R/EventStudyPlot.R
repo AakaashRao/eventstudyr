@@ -170,21 +170,18 @@ EventStudyPlot <- function(estimates,
 
         if (pre_event_coeffs & post_event_coeffs) {
             text_caption <- paste0(text_pretrends, " -- ", text_levelingoff)
-
         } else if (pre_event_coeffs & !post_event_coeffs) {
             text_caption <- text_pretrends
-
         } else if (!pre_event_coeffs & post_event_coeffs) {
             text_caption <- text_levelingoff
-
         }
     } else {
         text_caption <- NULL
     }
 
-
-    df_plt <- PreparePlottingData(df_estimates_tidy, policyvar,
-                                  post, overidpost, pre, overidpre, normalization_column, proxyIV)
+    df_plt <- PreparePlottingData(
+        df_estimates_tidy, policyvar,
+        post, overidpost, pre, overidpre, normalization_column, proxyIV)
 
 # Construct y breaks ------------------------------------------------------
 

@@ -121,10 +121,9 @@ EventStudyPlot <- function(estimates,
 
 # Estimation Elements -----------------------------------------------------
 
-    df_estimates      <- estimates$output
-    df_estimates_tidy <- estimatr::tidy(estimates$output)
+    df_estimates <- estimates$output
 
-    static_model <- nrow(df_estimates_tidy) == 1
+    static_model <- length(coef(df_estimates)) == 1
     if (static_model) {
         stop("EventStudyPlot() does not support static models.")
     }

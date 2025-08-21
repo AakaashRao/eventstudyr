@@ -265,10 +265,14 @@ EventStudyPlot <- function(estimates,
         coefficients <- df_plt$estimate
 
         # Add column and row in matrix of coefficients in index of norm columns
-        covar <- AddZerosCovar(estimates$output$vcov,
-                               eventstudy_coefficients,
-                               df_plt[df_plt$estimate==0, ]$term,
-                               df_plt$term)
+        is_fixest <- class(model_estimates) == "fixest"
+        vcov <- if(is_fixest) {fixest::vcov(estimates$output)} else {estimates$output$vcov}
+        covar <- AddZerosCovar(
+          vcov,
+          eventstudy_coefficients,
+          df_plt[df_plt$estimate == 0, ]$term,
+          df_plt$term
+        )
 
         inv_covar <- pracma::pinv(covar)
 

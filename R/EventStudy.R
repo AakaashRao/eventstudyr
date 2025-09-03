@@ -2,13 +2,15 @@
 #'
 #' @description `EventStudy` uses regression methods to estimate the effect of a policy on a given outcome.
 #'
-#' @param estimator Accepts one of "OLS" or "FHS". If "OLS" is specified, implements Ordinary Least Squares. If "FHS" is specified, implements Instrumental Variables (IV) estimator proposed in [Freyaldenhoven Hansen Shapiro (FHS, 2019)](https://www.aeaweb.org/articles?id=10.1257/aer.20180609).
+#' @param estimator Accepts one of "OLS", "FHS", or "feols". If "OLS" is specified, implements Ordinary Least Squares. If "FHS" is specified, implements Instrumental Variables (IV) estimator proposed in [Freyaldenhoven Hansen Shapiro (FHS, 2019)](https://www.aeaweb.org/articles?id=10.1257/aer.20180609). If "feols" is specified, uses fixest::feols() for fixed effects estimation.
 #' @param data Data frame containing the variables of interest.
 #' @param outcomevar Character indicating column of outcome variable y.
 #' @param policyvar Character indicating column of policy variable z.
 #' @param idvar Character indicating column of units.
 #' @param timevar Character indicating column of time periods.
 #' @param controls Optional character vector indicating a set of control variables q.
+#' @param additional_fixed_effects Optional character string specifying additional fixed effects to include.
+#' Only used when estimator is "feols". Example: "show+month" to include show and month fixed effects.
 #' @param proxy Character indicating column of variable that is thought to be affected by the confound but not by the policy.
 #' Should be specified if and only if estimator is specified as "FHS".
 #' @param proxyIV Character of column to be used as an instrument. Should be specified if and only if estimator is specified as "FHS".
@@ -141,14 +143,34 @@
 #'
 #' summary(eventstudy_model_iv$output)
 #'
+#' # A dynamic model using feols estimator
+#' eventstudy_model_feols <-
+#'   EventStudy(
+#'     estimator = "feols",
+#'     data = example_data,
+#'     outcomevar = "y_base",
+#'     policyvar = "z",
+#'     idvar = "id",
+#'     timevar = "t",
+#'     controls = "x_r",
+#'     FE = TRUE, TFE = TRUE,
+#'     post = 2, overidpost = 1,
+#'     pre  = 2, overidpre  = 3,
+#'     normalize = -1,
+#'     cluster = TRUE
+#'   )
+#'
+#' summary(eventstudy_model_feols$output)
+#'
 
 EventStudy <- function(estimator, data, outcomevar, policyvar, idvar, timevar, controls = NULL,
+                       additional_fixed_effects = NULL,
                        proxy = NULL, proxyIV = NULL, FE = TRUE, TFE = TRUE, post, overidpost = 1, pre, overidpre = post + pre,
                        normalize = -1 * (pre + 1), cluster = TRUE, anticipation_effects_normalization = TRUE,
                        allow_duplicate_id = FALSE, avoid_internal_copy = FALSE) {
 
     # Check for errors in arguments
-    if (! estimator %in% c("OLS", "FHS")) {stop("estimator should be either 'OLS' or 'FHS'.")}
+    if (! estimator %in% c("OLS", "FHS", "feols")) {stop("estimator should be either 'OLS', 'FHS', or 'feols'.")}
     if (! is.data.frame(data))            {stop("data should be a data frame.")}
     for (var in c(idvar, timevar, outcomevar, policyvar)) {
         if ((! is.character(var))) {
@@ -159,6 +181,8 @@ EventStudy <- function(estimator, data, outcomevar, policyvar, idvar, timevar, c
         }
     }
     if (! (is.null(controls) | is.character(controls))) {stop("controls should be either NULL or a character.")}
+    if (! (is.null(additional_fixed_effects) | is.character(additional_fixed_effects))) {stop("additional_fixed_effects should be either NULL or a character.")}
+    if ((estimator != "feols" & ! is.null(additional_fixed_effects))) {stop("additional_fixed_effects should only be specified when estimator = 'feols'.")}
 
     if ((estimator == "OLS" & ! is.null(proxy)))        {stop("proxy should only be specified when estimator = 'FHS'.")}
     if ((estimator == "FHS" & ! is.character(proxy)))   {stop("proxy should be a character.")}
@@ -341,8 +365,14 @@ EventStudy <- function(estimator, data, outcomevar, policyvar, idvar, timevar, c
 
         output       <- EventStudyOLS(event_study_formula, data, idvar, timevar, FE, TFE, cluster)
         coefficients <- str_policy_vars
-    }
-    if (estimator == "FHS") {
+    } else if (estimator == "feols") {
+        event_study_formula <- PrepareModelFormulaFeols(outcomevar, str_policy_vars,
+                                                        static, controls, additional_fixed_effects,
+                                                        idvar, timevar, FE, TFE)
+        
+        output       <- EventStudyFeols(event_study_formula, data, idvar, timevar, FE, TFE, cluster)
+        coefficients <- str_policy_vars
+    } else if (estimator == "FHS") {
 
         if (is.null(proxyIV)) {
             Fstart <- 0
@@ -385,6 +415,7 @@ EventStudy <- function(estimator, data, outcomevar, policyvar, idvar, timevar, c
                              "normalize"  = normalize,
                              "normalization_column"    = normalization_column,
                              "cluster"                 = cluster,
+                             "additional_fixed_effects" = additional_fixed_effects,
                              "eventstudy_coefficients" = coefficients)
 
     return(list("output"    = output,

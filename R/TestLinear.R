@@ -36,8 +36,8 @@
 TestLinear <- function(estimates, test = NA, test_name = "User Test", pretrends = TRUE, leveling_off = TRUE){
     if (! is.list(estimates) | length(estimates) != 2){
         stop("estimates should be a list of length two, an output of EventStudy()")}
-    if ((! class(estimates$output) %in% c("lm_robust", "iv_robust")) | ! is.list(estimates$output)) {
-        stop("The first element of estimates should be a list of class 'lm_robust' with coefficient estimates and standard errors")
+    if ((! class(estimates$output) %in% c("lm_robust", "iv_robust", "fixest")) | ! is.list(estimates$output)) {
+        stop("The first element of estimates should be a list of class 'lm_robust', 'iv_robust', or 'fixest' with coefficient estimates and standard errors")
     }
     if (! is.list(estimates$arguments) | ! is.list(estimates$arguments)) {
         stop("The second element of estimates should be a list with argument definitions, an output of EventStudy().")
@@ -47,9 +47,11 @@ TestLinear <- function(estimates, test = NA, test_name = "User Test", pretrends 
     if (! is.logical(leveling_off)) {stop("leveling_off should be a logical. Default value is TRUE")}
 
     if(estimates$arguments$cluster == TRUE){
-
-        estimates$output$df.residual <- estimates$output$nclusters - 1
-
+        if (inherits(estimates$output, "fixest")) {
+            estimates$output$df.residual <- as.integer(fixest::fitstat(estimates$output, "g")) - 1
+        } else {
+            estimates$output$df.residual <- estimates$output$nclusters - 1
+        }
     }
 
     coefficients <- estimates$arguments$eventstudy_coefficients

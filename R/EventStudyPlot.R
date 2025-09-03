@@ -122,8 +122,14 @@ EventStudyPlot <- function(estimates,
 # Estimation Elements -----------------------------------------------------
 
     df_estimates      <- estimates$output
-    df_estimates_tidy <- estimatr::tidy(estimates$output)
-
+    
+    # Handle different estimator types for tidy output
+    if (inherits(df_estimates, "fixest")) {
+        df_estimates_tidy <- broom::tidy(df_estimates)
+    } else {
+        df_estimates_tidy <- estimatr::tidy(df_estimates)
+    }
+    
     static_model <- nrow(df_estimates_tidy) == 1
     if (static_model) {
         stop("EventStudyPlot() does not support static models.")
@@ -269,7 +275,8 @@ EventStudyPlot <- function(estimates,
         coefficients <- df_plt$estimate
 
         # Add column and row in matrix of coefficients in index of norm columns
-        covar <- AddZerosCovar(estimates$output$vcov,
+        vcov_matrix <- if(inherits(estimates$output, "fixest")) vcov(estimates$output) else estimates$output$vcov
+        covar <- AddZerosCovar(vcov_matrix,
                                eventstudy_coefficients,
                                df_plt[df_plt$estimate==0, ]$term,
                                df_plt$term)

@@ -34,13 +34,15 @@ EventStudyFeols <- function(prepared_model_formula, prepared_data,
             fml = prepared_model_formula,
             data = prepared_data,
             cluster = cluster_formula,
-            ssc = fixest::ssc(adj = TRUE, fixef.K = "nested")
+            ssc = fixest::ssc(adj = TRUE, fixef.K = "nested"),
+            lean = FALSE
         )
     } else {
         feols_output <- fixest::feols(
             fml = prepared_model_formula,
             data = prepared_data,
-            se = "hetero"
+            se = "hetero",
+            lean = FALSE
         )
     }
     

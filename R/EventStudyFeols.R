@@ -45,6 +45,5 @@ EventStudyFeols <- function(prepared_model_formula, prepared_data,
             lean = FALSE
         )
     }
-    
     return(feols_output)
 }
